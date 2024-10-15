@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="files">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tak/certs/files/-user1.dp.zip!/" />
+      <root url="jar://$PROJECT_DIR$/tak/certs/files/-user2.dp.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

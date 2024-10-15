@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="takserver-docker-5.2-RELEASE-43">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/takserver-docker-5.2-RELEASE-43.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

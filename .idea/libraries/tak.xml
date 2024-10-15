@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="tak">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tak/takserver-pm.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tak/takserver-retention.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

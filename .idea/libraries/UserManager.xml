@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="UserManager">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tak/utils/UserManager.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
