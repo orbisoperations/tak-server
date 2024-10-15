@@ -18,6 +18,11 @@ then
 	echo "Docker compose command set to new style $DOCKER_COMPOSE"
 fi
 
+if ! command -v dpkg
+then
+	echo "dpkg is used to select the appropriate docker-compose file. If on OSX please use brew to install it"
+fi
+
 
 printf $success "\nTAK server setup script sponsored by CloudRF.com - \"The API for RF\"\n"
 printf $info "\nStep 1. Download the official docker image as a zip file from https://tak.gov/products/tak-server \nStep 2. Place the zip file in this tak-server folder.\n"
@@ -31,6 +36,12 @@ if [ $arch == "arm64" ];
 then
 	DOCKERFILE=docker-compose.arm.yml
 	printf "\nBuilding for arm64...\n" "info"
+fi
+
+if [ $arch == "darwin-arm64" ];
+then
+	DOCKERFILE=docker-compose.darwin.yml
+	printf "\nBuilding for OSX/darwin...\n" "info"
 fi
 
 
@@ -221,26 +232,37 @@ chown -R $USER:$USER tak
 # This config uses a docker alias of postgresql://tak-database:5432/
 cp ./CoreConfig.xml ./tak/CoreConfig.xml
 
+## LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 15; echo
+## fixes illegal byte sequence error from tr on OSX
+
 ## Set admin username and password and ensure it meets validation criteria
 user="admin"
-pwd=$(cat /dev/urandom | tr -dc '[:alpha:][:digit:]' | fold -w ${1:-11} | head -n 1)
+pwd=$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 15; echo)
 password=$pwd"Meh1!"
 
 ## Set postgres password and ensure it meets validation criteria
-pgpwd="$(cat /dev/urandom | tr -dc '[:alpha:][:digit:]' | fold -w ${1:-11} | head -n 1)"
+pgpwd="$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 15; echo)"
 pgpassword=$pgpwd"Meh1!"
 
 # get IP
+## add in step to set to localhost for local dev
 NIC=$(route | grep default | awk '{print $8}' | head -n 1)
-IP=$(ip addr show $NIC | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f1)
+FOUND_IP=$(ip addr show $NIC | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f1)
+read -p "Is this the right IP address to use?. Default [$FOUND_IP] : " defaultIP
+if [ -z "$defaultIP" ];
+then
+	IP=$FOUND_IP
+else
+  IP=$defaultIP
+fi
 
 printf $info "\nProceeding with IP address: $IP\n"
-sed -i "s/password=\".*\"/password=\"${pgpassword}\"/" tak/CoreConfig.xml
+sed -i '' "s/password=\".*\"/password=\"${pgpassword}\"/" tak/CoreConfig.xml
 # Replaces HOSTIP for rate limiter and Fed server. Database URL is a docker alias of tak-database
-sed -i "s/HOSTIP/$IP/g" tak/CoreConfig.xml
+sed -i '' "s/HOSTIP/$IP/g" tak/CoreConfig.xml
 
 # Replaces takserver.jks with $IP.jks
-sed -i "s/takserver.jks/$IP.jks/g" tak/CoreConfig.xml
+sed -i '' "s/takserver.jks/$IP.jks/g" tak/CoreConfig.xml
 
 # Better memory allocation:
 # By default TAK server allocates memory based upon the *total* on a machine. 
@@ -252,7 +274,7 @@ then
 	mem="4000000"
 fi
 
-sed -i "s%\`awk '/MemTotal/ {print \$2}' /proc/meminfo\`%$mem%g" tak/setenv.sh
+sed -i '' "s%\`awk '/MemTotal/ {print \$2}' /proc/meminfo\`%$mem%g" tak/setenv.sh
 
 ## Set variables for generating CA and client certs
 printf $warning "SSL setup. Hit enter (x4) to accept the defaults:\n"
@@ -351,6 +373,7 @@ sleep 10
 while :
 do
 	sleep 10
+	echo "$user $password"
 	$DOCKER_COMPOSE exec tak bash -c "cd /opt/tak/ && java -jar /opt/tak/utils/UserManager.jar usermod -A -p $password $user"
 	if [ $? -eq 0 ];
 	then
